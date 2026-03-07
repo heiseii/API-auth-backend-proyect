@@ -34,11 +34,11 @@ class JWTAuthorizationMiddleware:
     def __call__(self, request):
         path = request.path
 
-        # ── Rutas públicas — dejar pasar sin verificar ──
+        #  Rutas públicas — dejar pasar sin verificar 
         if self._is_public(path):
             return self.get_response(request)
 
-        # ── Intentar autenticar con JWT ──────────────────
+        # Intentar autenticar con JWT 
         user = self._authenticate(request)
 
         if user is None:
@@ -53,7 +53,7 @@ class JWTAuthorizationMiddleware:
                 status=403
             )
 
-        # ── Verificar acceso a rutas de admin ────────────
+        #  Verificar acceso a rutas de admin 
         if self._is_admin_path(path):
             if not (user.is_staff or user.is_superuser):
                 return JsonResponse(
@@ -61,7 +61,7 @@ class JWTAuthorizationMiddleware:
                     status=403
                 )
 
-        # ── Todo OK — continuar con la request ──────────
+        # Todo OK — continuar con la request 
         request.user = user
         return self.get_response(request)
 

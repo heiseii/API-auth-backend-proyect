@@ -2,18 +2,18 @@ from rest_framework import serializers
 from .models import User, Role, Permission
 
 
-# 
+ 
 # PERMISSION SERIALIZER
-# 
+ 
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields = ["id", "name", "codename", "description"]
 
 
-# 
+
 # ROLE SERIALIZER
-# 
+ 
 class RoleSerializer(serializers.ModelSerializer):
     permissions = PermissionSerializer(many=True, read_only=True)
 
@@ -22,9 +22,9 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "description", "permissions"]
 
 
-# 
+ 
 # REGISTER SERIALIZER
-# 
+ 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -72,9 +72,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-#   
+   
 # USER SERIALIZER (para perfil y respuestas)
-#   
+
 class UserSerializer(serializers.ModelSerializer):
     roles = RoleSerializer(many=True, read_only=True)
     permissions = serializers.SerializerMethodField()
@@ -89,3 +89,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_permissions(self, obj):
         return list(obj.get_all_permissions_codenames())
+
+#Roles Serializer
+class RoleSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer(many=True, read_only=True)
+    permission_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        write_only=True,
+        queryset=Permission.objects.all(),
+        source="permissions",
+        required=False
+    )
+
+    class Meta:
+        model = Role
+        fields = ["id", "name", "description", "permissions", "permission_ids"]
