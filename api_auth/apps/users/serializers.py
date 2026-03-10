@@ -11,18 +11,6 @@ class PermissionSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "codename", "description"]
 
 
-
-# ROLE SERIALIZER
- 
-class RoleSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Role
-        fields = ["id", "name", "description", "permissions"]
-
-
- 
 # REGISTER SERIALIZER
  
 class RegisterSerializer(serializers.ModelSerializer):
@@ -76,6 +64,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 # USER SERIALIZER (para perfil y respuestas)
 
 class UserSerializer(serializers.ModelSerializer):
+    roles = RoleSerializer(many=True, read_only=True)
+    permissions = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -87,7 +78,8 @@ class UserSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj):
         return list(obj.get_all_permissions_codenames())
 
-#Roles Serializer
+#ROLES SERIALIZER       
+
 class RoleSerializer(serializers.ModelSerializer):
     permissions = PermissionSerializer(many=True, read_only=True)
     permission_ids = serializers.PrimaryKeyRelatedField(

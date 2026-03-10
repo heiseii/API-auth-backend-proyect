@@ -14,9 +14,9 @@ from .serializers import CustomTokenObtainPairSerializer
 from .throttles import LoginRateThrottle
 
 
-# 
+ 
 # LOGIN VIEW
-# 
+ 
 class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class = CustomTokenObtainPairSerializer
@@ -82,9 +82,9 @@ class LoginView(TokenObtainPairView):
         return request.META.get("REMOTE_ADDR")
 
 
-# 
+
 # LOGOUT VIEW
-# 
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
