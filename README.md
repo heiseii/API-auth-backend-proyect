@@ -38,7 +38,7 @@ en roles dinámicos, protección contra ataques de fuerza bruta y rate limiting.
 
 ## 🛠 Stack tecnológico
 
-- **Lenguaje:** Python 3.11+
+- **Lenguaje:** Python 3.14
 - **Framework:** Django 5 + Django REST Framework
 - **Base de datos:** PostgreSQL
 - **Autenticación:** djangorestframework-simplejwt
