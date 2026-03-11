@@ -54,7 +54,6 @@ en roles dinámicos, protección contra ataques de fuerza bruta y rate limiting.
 api_auth/
 ├── manage.py
 ├── requirements.txt
-├── .env                          # Variables de entorno (no subir a Git)
 ├── .env.example                  # Ejemplo de variables de entorno
 ├── config/
 │   ├── settings.py               # Configuración global
