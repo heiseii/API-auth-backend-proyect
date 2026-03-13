@@ -4,17 +4,11 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ──────────────────────────────────────────
-# CORE
-# ──────────────────────────────────────────
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = ["*"]  # Restringir en producción
 
 
-# ──────────────────────────────────────────
-# APPS
-# ──────────────────────────────────────────
 DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -39,9 +33,6 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 
-# ──────────────────────────────────────────
-# MIDDLEWARE
-# ──────────────────────────────────────────
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -74,9 +65,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# ──────────────────────────────────────────
-# BASE DE DATOS — PostgreSQL
-# ──────────────────────────────────────────
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -89,9 +77,7 @@ DATABASES = {
 }
 
 
-# ──────────────────────────────────────────
-# AUTENTICACIÓN — Custom User + Bcrypt
-# ──────────────────────────────────────────
+
 AUTH_USER_MODEL = "users.User"
 
 # Bcrypt como hasher principal
@@ -100,42 +86,30 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",  # fallback
 ]
 
-AUTH_PASSWORD_VALIDATORS = [
+AAUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "apps.utils.password_validators.StrongPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-     "OPTIONS": {"min_length": 8}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
-# ──────────────────────────────────────────
-# DJANGO REST FRAMEWORK
-# ──────────────────────────────────────────
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "EXEPTION_HANDLER": "apps.utils.exeption_handler.custom_exemption_handler",
+    "DEFAULT_AUTHENTICATION_CLASSES": "rest_framework_simplejwt.authentication.JWTAuthentication",
+    "DEFAULT_PERMISSION_CLASSES": "rest_framework.permissions.IsAuthenticated",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    # Throttling global (configuraremos clases custom más adelante)
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
-    ],
-    "DEFAULT_THROTTLE_RATES": {
+        ],
+    "DEFAULT_THROTTLE_RATES": [
         "anon": "100/day",
         "user": "1000/day",
         "login": "5/minute",      # Throttle custom para login
-    },
+    ],
 }
 
 
-# ──────────────────────────────────────────
-# SIMPLE JWT
-# ──────────────────────────────────────────
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         minutes=config("ACCESS_TOKEN_LIFETIME_MINUTES", default=15, cast=int)
@@ -153,16 +127,10 @@ SIMPLE_JWT = {
 }
 
 
-# ──────────────────────────────────────────
-# SEGURIDAD — Bloqueo por intentos fallidos
-# ──────────────────────────────────────────
 MAX_FAILED_ATTEMPTS = config("MAX_FAILED_ATTEMPTS", default=5, cast=int)
 LOCKOUT_DURATION_MINUTES = config("LOCKOUT_DURATION_MINUTES", default=15, cast=int)
 
-
-# ──────────────────────────────────────────
-# SPECTACULAR (Swagger docs)
-# ──────────────────────────────────────────
+#Swagger
 SPECTACULAR_SETTINGS = {
     "TITLE": "API de Autenticación y Seguridad",
     "DESCRIPTION": "API enfocada en seguridad: JWT, roles, permisos y rate limiting.",
@@ -170,10 +138,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-
-# ──────────────────────────────────────────
-# INTERNACIONALIZACIÓN
-# ──────────────────────────────────────────
 LANGUAGE_CODE = "es-ar"
 TIME_ZONE = "America/Argentina/Buenos_Aires"
 USE_I18N = True

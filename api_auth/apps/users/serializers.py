@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import User, Role, Permission
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 
  
@@ -44,13 +46,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ["email", "username", "first_name", "last_name", "password", "password_confirm"]
 
     def validate_email(self, value):
+        value = value.strip().lower()  #aplica minus.
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Ya existe un usuario con este email.")
         return value
 
     def validate_username(self, value):
+        value = value.strip()  #elimina espacios
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Este username ya está en uso.")
+        return value
+
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
         return value
 
     def validate(self, data):
@@ -59,15 +70,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Removemos password_confirm antes de crear el usuario
         validated_data.pop("password_confirm")
         password = validated_data.pop("password")
 
         user = User(**validated_data)
-        user.set_password(password)  # Aplica bcrypt
+        user.set_password(password)
         user.save()
 
-        # Asignar rol "user" por defecto si existe
         default_role = Role.objects.filter(name="user").first()
         if default_role:
             user.roles.add(default_role)
@@ -76,7 +85,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
    
-# USER SERIALIZER (para perfil y respuestas)
+# USER SERIALIZER 
 
 class UserSerializer(serializers.ModelSerializer):
     roles = RoleSerializer(many=True, read_only=True)
@@ -93,3 +102,11 @@ class UserSerializer(serializers.ModelSerializer):
     def get_permissions(self, obj):
         return list(obj.get_all_permissions_codenames())
 
+    def validate_username(self, value):
+        return value.strip()
+
+    def validate_first_name(self, value):
+        return value.strip().capitalize()
+
+    def validate_last_name(self, value):
+        return value.strip().capitalize()
