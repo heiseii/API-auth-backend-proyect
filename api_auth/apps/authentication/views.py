@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
+from apps.utils.responses import error_response, success_response
 from apps.users.serializers import UserSerializer
 from .serializers import CustomTokenObtainPairSerializer
 from .throttles import LoginRateThrottle
@@ -25,10 +26,8 @@ class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         email = request.data.get("email", "")
 
-        # Importamos User acá para evitar imports circulares
         from apps.users.models import User
 
-        # Verificar si el usuario existe y está bloqueado
         try:
             user = User.objects.get(email=email)
 
@@ -39,30 +38,24 @@ class LoginView(TokenObtainPairView):
                 )
 
         except User.DoesNotExist:
-            # No revelamos si el usuario existe o no
             pass
 
-        # Intentar autenticación
         response = super().post(request, *args, **kwargs)
 
         if response.status_code == 200:
-            # Login exitoso — resetear intentos fallidos
             try:
                 user = User.objects.get(email=email)
                 user.reset_failed_attempts()
 
-                # Guardar IP del usuario
-                user.last_login_ip = self._get_client_ip(request)
+                user.last_login_ip = self._get_client_ip(request) #guardar ip
                 user.save(update_fields=["last_login_ip"])
 
-                # Agregar datos del usuario a la respuesta
-                response.data["user"] = UserSerializer(user).data
+                response.data["user"] = UserSerializer(user).data #guardar passw
 
             except User.DoesNotExist:
                 pass
 
         else:
-            # Login fallido — registrar intento
             try:
                 user = User.objects.get(email=email)
                 user.register_failed_attempt(
@@ -89,26 +82,23 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            refresh_token = request.data.get("refresh")
+        refresh_token = request.data.get("refresh")
 
-            if not refresh_token:
-                return Response(
-                    {"detail": "Se requiere el refresh token."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Agregar el token a la blacklist — revocación real
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-
-            return Response(
-                {"detail": "Sesión cerrada exitosamente."},
-                status=status.HTTP_200_OK
+        if not refresh_token:
+            return error_response(
+                code="MISSING_FIELD",
+                message="Se requiere el refresh token.",
+                status=400
             )
 
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return success_response({"message": "Sesión cerrada exitosamente."})
+
         except TokenError:
-            return Response(
-                {"detail": "Token inválido o ya revocado."},
-                status=status.HTTP_400_BAD_REQUEST
+            return error_response(
+                code="INVALID_TOKEN",
+                message="Token inválido o ya revocado.",
+                status=400
             )
